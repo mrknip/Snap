@@ -23,8 +23,7 @@ class SnapListener
       
     def nonblocking_stdin_gets
       sleep(0.1) until console_input_ready?
-      puts "GET HERE"
-      $stdin.gets  # don't bother to use getc, it also blocks until user hits <return>
+      $stdin.gets  
     end
   end
 
@@ -35,7 +34,6 @@ class SnapListener
       while true
         input = nonblocking_stdin_gets
         if input == "\n"
-          puts "HUMAN SNAP!"
           @playersnap = true
           @threads[1].kill
           @threads[0].kill
@@ -55,8 +53,6 @@ class SnapListener
  
   threads.each {|thr| thr.join}
   
-  puts "HUMAN SNAPPED" if playersnap == true
-  puts "COMPUTER SNAPPED" unless playersnap == true
   puts threads[0].alive?
   puts threads[1].alive?
   return playersnap

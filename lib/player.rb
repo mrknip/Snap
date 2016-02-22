@@ -2,10 +2,10 @@ class Player
 
   include Ui
 
-  def initialize
+  def initialize(name)
     @cards = []
     @pile = []
-    @name = ""
+    @name = name
   end
     
   attr_accessor :cards, :pile, :name

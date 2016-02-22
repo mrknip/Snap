@@ -1,8 +1,8 @@
-require "./lib/cards.rb"
-require "./lib/ui.rb"
-require "./lib/snaplistener.rb"
-require "./lib/player.rb"
-require "./lib/card.rb"
+require_relative "cards.rb"
+require_relative "ui.rb"
+require_relative "snaplistener.rb"
+require_relative "player.rb"
+require_relative "card.rb"
 
 class Game
 
@@ -10,43 +10,46 @@ class Game
   include Ui
   
   def initialize
-    @player1 = Player.new
-    @player1.name = "Human"
-    @player2 = Player.new
-    @player2.name = "Computer"
+    @player1 = Player.new("Human")
+    @player2 = Player.new("Snaptron 3000")
     @players = [@player1, @player2].cycle
     @current_player = players.next
   end
   
   attr_accessor :current_player, :player1, :player2, :players
   
-  def deal(player1, player2)
-    @fucksake = []
+  def deal
+    full_deck = [] # is this still a local variable if I don't use '@'?
       Cards::SUITS.each do |suit| 
         Cards::VALUES.each do |value| 
-          @fucksake << Card.new(suit, value)
+          full_deck << Card.new(suit, value)
         end
       end
     
-    @fucksake.shuffle!
+    full_deck.shuffle!
     
-    while @fucksake.length != 0
-      players.next.cards << @fucksake.shift
+    while full_deck.length != 0
+      players.next.cards << full_deck.shift
     end
   end
 
   def turn(current_player)
+    
+    puts "PLAYER1: #{player1.name} CARDS: #{player1.cards.length} PILE: " + "#{player1.pile.length}"
+    puts "PLAYER2: #{player2.name} CARDS: #{player2.cards.length} PILE: " + "#{player2.pile.length}"
+    
+    puts "\nPLAYER IS #{current_player.name}\n"
+    
     current_player.pick_up(current_player.pile) if out_of_cards?
+    
+    gets if current_player.name == "Human"
     current_player.play_card
     
     display_board(player1, player2)
     
     race_for_snap if snap?
     game_over if win?
-    
-    # TESTING
-    puts "PLAYER1: #{player1.cards.length}" + " PILE: " + "#{player1.pile.length}"
-    puts "PLAYER2: #{player2.cards.length}" + " PILE: " + "#{player2.pile.length}"
+
     sleep(0.5)
   end
   
@@ -57,18 +60,14 @@ class Game
   def race_for_snap
     puts "SNAP"
     snap_listener = SnapListener.new
-    puts snap_listener.class
     snap_listener.win32_api
     snap_listener.listen_for_snap
     if snap_listener.playersnap == true
       puts "HUMAN SNAP"
-      player1.pile.each{|c| player1.cards << c} 
-      player2.pile.each{|c| player1.cards << c}
-      player1.pile.clear
-      player2.pile.clear
+      players.take(2).each { |player| player1.pick_up(player.pile) }
     else
       puts "COMPUTER SNAP"
-      player2.cards << player1.pile[0..-1] + player2.pile[0..-1]
+      players.take(2).each { |player| player2.pick_up(player.pile) }
     end
     
     sleep(1)
@@ -96,12 +95,15 @@ class Game
   end
   
   def turn_switch
-    puts "PLAYER IS #{current_player.name}"
-    self.current_player = players.next  
+    @current_player = players.next  # Doesn't work without the class variable marker.  Don't know why as I have getter/setter sorted?
   end
   
   def start  
-    deal(player1, player2)
+    deal    
+    while !self.win?
+      self.turn(self.current_player)
+      self.turn_switch
+    end
   end
   
 end
